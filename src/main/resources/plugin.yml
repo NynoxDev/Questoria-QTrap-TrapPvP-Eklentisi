@@ -1,0 +1,24 @@
+name: QTrap
+version: 1.0.0
+main: me.questoria.qtrap.QTrapPlugin
+api-version: '1.21'
+authors: [Questoria]
+softdepend: [Vault, PlaceholderAPI, LuckPerms, DecentHolograms]
+commands:
+  trap:
+    description: Trap menusu ve oyuncu komutlari.
+    usage: /trap
+  qtrap:
+    description: QTrap admin komutlari.
+    usage: /qtrap
+  trapachunk:
+    description: Belirtilen trape chunk ekler.
+    usage: /trapachunk <id>
+    aliases: [trapaddchunk, qtrapaddchunk]
+permissions:
+  qtrap.admin:
+    default: op
+  qtrap.bypass:
+    default: op
+  qtrap.fly:
+    default: true

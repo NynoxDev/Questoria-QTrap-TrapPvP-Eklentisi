@@ -1,0 +1,191 @@
+﻿database:
+  type: "sqlite" # sqlite, mysql
+  sqlite-file: "qtrap.db"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "qtrap"
+    username: "root"
+    password: ""
+    params: "?useSSL=false&autoReconnect=true&characterEncoding=utf8"
+
+defaults:
+  trap-health: 2000
+  max-trap-health: 2000
+  start-level: 1
+  bank-balance: 0
+  pvp: false
+  visit: false
+
+economy:
+  require-vault: true
+  currency-name: "Milan"
+
+levels:
+  1:
+    upgrade-price: 0
+    max-members: 3
+    max-health: 2000
+    bank-limit: 1000000
+    chunk-limit: 1
+  2:
+    upgrade-price: 250000
+    max-members: 5
+    max-health: 3000
+    bank-limit: 2500000
+    chunk-limit: 2
+  3:
+    upgrade-price: 750000
+    max-members: 8
+    max-health: 5000
+    bank-limit: 5000000
+    chunk-limit: 3
+  4:
+    upgrade-price: 1500000
+    max-members: 12
+    max-health: 8000
+    bank-limit: 10000000
+    chunk-limit: 5
+
+roles:
+  OWNER:
+    display: "&cSahip"
+    permissions: [break, place, interact, chest, invite, kick, role, bank-deposit, bank-withdraw, upgrade, sell, pvp, visit, setspawn, fly]
+  MANAGER:
+    display: "&6Yonetici"
+    permissions: [break, place, interact, chest, invite, kick, bank-deposit, bank-withdraw, setspawn, fly]
+  MODERATOR:
+    display: "&eModerator"
+    permissions: [break, place, interact, chest, bank-deposit, fly]
+  MEMBER:
+    display: "&aUye"
+    permissions: [break, place, interact, chest, bank-deposit]
+
+protection:
+  damage-health-on-denied-break: true
+  denied-break-damage: 1
+  protect-block-break: true
+  protect-block-place: true
+  protect-interact: true
+  protect-containers: true
+  allowed-trusted-permissions: [interact, chest, break, place]
+
+fly:
+  enabled: true
+  require-permission: true
+  disable-on-leave: true
+
+market:
+  enabled: true
+  min-price: 1
+  max-price: 1000000000
+
+placeholders:
+  enabled: true
+
+holograms:
+  enabled: true
+  provider: "DecentHolograms"
+  name-prefix: "qtrap_"
+  y-offset: 3.2
+  front-offset: 1.5
+  small-font: true
+  delete-on-disable: true
+  update-on-load: true
+  lines:
+    - "&fTRAP NUMARASI: &b%id%"
+    - "&fTRAP SAHIBI: &b%owner%"
+    - "&fTRAP CANI: &b%health%/%max_health%"
+    - "&fTRAP BANKASI: &b%bank%"
+
+gui:
+  filler:
+    material: GRAY_STAINED_GLASS_PANE
+    name: " "
+  titles:
+    main: "TRAP MENUSU"
+    list: "TRAPLER (%page%/%pages%)"
+    members: "TRAP UYELERI (%page%/%pages%)"
+    upgrade: "TRAP YUKSELTME"
+    info: "TRAP INFO NO: %id%"
+    roles: "ROL BILGI"
+    confirm-buy: "SATIN ALMA ONAYI"
+    bank: "TRAP BANKASI"
+    market: "TRAP PAZARI"
+    admin: "QTRAP ADMIN"
+
+sounds:
+  success: ENTITY_PLAYER_LEVELUP
+  error: BLOCK_NOTE_BLOCK_BASS
+  click: UI_BUTTON_CLICK
+
+messages:
+  prefix: "&8[&cQTrap&8] "
+  admin-help:
+    - "&8&m--------------------------------------------------"
+    - "&c&lQTrap &7- Admin Komutları"
+    - ""
+    - "&f/qtrap reload &8- &7Config ve cache yeniler."
+    - "&f/qtrap create <id> <fiyat> &8- &7Bulunduğun chunkta trap oluşturur."
+    - "&f/qtrap delete <id> &8- &7Trapi siler."
+    - "&f/qtrap info <id> &8- &7Trap detaylarını gösterir."
+    - "&f/qtrap setprice <id> <fiyat> &8- &7Satın alma fiyatını ayarlar."
+    - "&f/qtrap setowner <id> <oyuncu> &8- &7Trap sahibini değiştirir."
+    - "&f/qtrap addchunk <id> &8- &7Bulunduğun chunkı trape ekler."
+    - "&f/qtrap removechunk <id> &8- &7Bulunduğun chunkı trapten çıkarır."
+    - "&f/qtrap sethealth <id> <miktar> &8- &7Trap canını ayarlar."
+    - "&f/qtrap setmaxhealth <id> <miktar> &8- &7Maksimum canı ayarlar."
+    - "&f/qtrap setlevel <id> <seviye> &8- &7Trap seviyesini ayarlar."
+    - "&8&m--------------------------------------------------"
+  no-permission: "&cBu işlem için yetkin yok."
+  player-only: "&cBu komut sadece oyuncular tarafından kullanılabilir."
+  reloaded: "&aQTrap başarıyla yenilendi."
+  trap-not-found: "&cBelirtilen trap bulunamadı."
+  not-in-trap: "&cŞu anda bir trap bölgesinde değilsin."
+  not-owner: "&cBu işlem için trap sahibi veya yetkili rolünde olmalısın."
+  no-economy: "&cVault ekonomi bağlantısı bulunamadı. Satın alma işlemi yapılamaz."
+  admin-usage: "&cKullanım için &f/qtrap &cyazabilirsin."
+  admin-create-usage: "&cKullanım: &f/qtrap create <id> <fiyat>"
+  admin-id-usage: "&cKullanım: &f/qtrap %command% <id>"
+  admin-value-usage: "&cKullanım: &f/qtrap %command% <id> <değer>"
+  admin-addchunk-usage: "&cKullanım: &f/trapachunk <id>"
+  admin-removechunk-usage: "&cKullanım: &f/qtrap removechunk <id> &7veya &f/qtrap removechunk <id> <chunkX> <chunkZ>"
+  invalid-number: "&cGeçersiz sayı girdin. Lütfen sadece rakam kullan."
+  invalid-value: "&cGeçersiz değer girdin. Komutu kontrol edip tekrar dene."
+  trap-already-exists: "&cBu ID ile zaten bir trap var."
+  chunk-already-used: "&cBulunduğun chunk zaten başka bir trape bağlı."
+  chunk-already-in-trap: "&cBu chunk zaten bu trape bağlı."
+  chunk-not-in-trap: "&cBu chunk belirtilen trape bağlı değil."
+  chunk-last-remove: "&cBir trapin son chunkı silinemez. Trapi silmek için &f/qtrap delete <id> &ckullan."
+  chunk-added: "&aChunk eklendi. &7Trap: &e%id% &7Toplam chunk: &e%chunks%"
+  chunk-removed: "&cChunk çıkarıldı. &7Trap: &e%id% &7Toplam chunk: &e%chunks%"
+  not-enough-money: "&cYeterli paran yok. Gerekli tutar: &e%price%"
+  bought: "&a%trap% trapini satın aldın."
+  sold: "&aTrap satışa çıkarıldı. Fiyat: &e%price%"
+  sale-cancelled: "&cTrap satışı iptal edildi."
+  upgraded: "&aTrap seviyesi &e%level% &aoldu."
+  max-level: "&cTrap zaten maksimum seviyede."
+  invited: "&a%player% oyuncusuna trap daveti gönderildi."
+  invite-received: "&e%trap% &atrapine davet edildin. &f/trap kabul &7veya &f/trap reddet"
+  invite-accepted: "&aTrap daveti kabul edildi."
+  invite-denied: "&cTrap daveti reddedildi."
+  member-kicked: "&c%player% trapten çıkarıldı."
+  role-changed: "&a%player% oyuncusunun rolü &e%role% &aolarak ayarlandı."
+  bank-deposit: "&aTrap bankasına &e%amount% &ayatırıldı."
+  bank-withdraw: "&aTrap bankasından &e%amount% &açekildi."
+  bank-limit: "&cTrap banka limiti aşılıyor."
+  pvp-toggle: "&aTrap PvP durumu: &e%state%"
+  visit-toggle: "&aTrap ziyaret durumu: &e%state%"
+  spawn-set: "&aTrap spawn noktası ayarlandı."
+  teleported: "&aTrap spawn noktasına ışınlandın."
+  fly-enabled: "&aTrap fly açıldı."
+  fly-disabled: "&cTrap fly kapatıldı."
+  protected: "&cBu trap bölgesinde bunu yapamazsın."
+  health-damaged: "&cTrap canı azaldı: &e%health%/%max_health%"
+  trap-disbanded: "&c%trap% trapinin canı bitti ve dağıldı."
+  chat-enabled: "&aTrap sohbeti açıldı."
+  chat-disabled: "&cTrap sohbeti kapatıldı."
+  created: "&aTrap oluşturuldu: &e%id% &7(/qtrap info %id%)"
+  deleted: "&cTrap silindi: &e%id%"
+  updated: "&aTrap güncellendi: &e%id%"
+
