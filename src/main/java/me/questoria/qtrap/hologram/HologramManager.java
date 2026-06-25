@@ -226,7 +226,11 @@ public final class HologramManager {
                 "%max_health%", trap.maxHealth(),
                 "%bank%", plugin.vault().format(trap.bankBalance()),
                 "%level%", trap.level(),
-                "%name%", trap.name()
+                "%name%", trap.name(),
+                "%status%", status(trap),
+                "%status_color%", statusColor(trap),
+                "%health_color%", healthColor(trap),
+                "%level_color%", levelColor(trap)
         );
         List<String> output = new ArrayList<>();
         for (String line : plugin.getConfig().getStringList("holograms.lines")) {
@@ -254,27 +258,27 @@ public final class HologramManager {
 
     private char smallChar(char character) {
         return switch (Character.toLowerCase(character)) {
-            case 'a' -> 'ᴀ';
+            case 'a', 'á' -> 'ᴀ';
             case 'b' -> 'ʙ';
-            case 'c' -> 'ᴄ';
+            case 'c', 'ç' -> 'ᴄ';
             case 'd' -> 'ᴅ';
             case 'e' -> 'ᴇ';
             case 'f' -> 'ꜰ';
-            case 'g' -> 'ɢ';
+            case 'g', 'ğ' -> 'ɢ';
             case 'h' -> 'ʜ';
-            case 'i' -> 'ɪ';
+            case 'i', 'ı', 'İ' -> 'ɪ';
             case 'j' -> 'ᴊ';
             case 'k' -> 'ᴋ';
             case 'l' -> 'ʟ';
             case 'm' -> 'ᴍ';
             case 'n' -> 'ɴ';
-            case 'o' -> 'ᴏ';
+            case 'o', 'ö' -> 'ᴏ';
             case 'p' -> 'ᴘ';
             case 'q' -> 'ǫ';
             case 'r' -> 'ʀ';
-            case 's' -> 'ꜱ';
+            case 's', 'ş' -> 'ꜱ';
             case 't' -> 'ᴛ';
-            case 'u' -> 'ᴜ';
+            case 'u', 'ü' -> 'ᴜ';
             case 'v' -> 'ᴠ';
             case 'w' -> 'ᴡ';
             case 'x' -> 'x';
@@ -290,6 +294,44 @@ public final class HologramManager {
         }
         OfflinePlayer owner = Bukkit.getOfflinePlayer(trap.owner());
         return owner.getName() == null ? trap.owner().toString().substring(0, 8) : owner.getName();
+    }
+
+    private String status(TrapModel trap) {
+        if (trap.forSale()) {
+            return "SATILIK";
+        }
+        return trap.owned() ? "SAHIPLI" : "SATIN ALINABILIR";
+    }
+
+    private String statusColor(TrapModel trap) {
+        if (trap.forSale()) {
+            return "&e";
+        }
+        return trap.owned() ? "&c" : "&a";
+    }
+
+    private String healthColor(TrapModel trap) {
+        double progress = trap.maxHealth() <= 0 ? 0D : trap.health() / (double) trap.maxHealth();
+        if (progress >= 0.66D) {
+            return "&a";
+        }
+        if (progress >= 0.33D) {
+            return "&e";
+        }
+        return "&c";
+    }
+
+    private String levelColor(TrapModel trap) {
+        if (trap.level() >= 4) {
+            return "&d";
+        }
+        if (trap.level() >= 3) {
+            return "&b";
+        }
+        if (trap.level() >= 2) {
+            return "&e";
+        }
+        return "&f";
     }
 
     private String hologramName(TrapModel trap) {

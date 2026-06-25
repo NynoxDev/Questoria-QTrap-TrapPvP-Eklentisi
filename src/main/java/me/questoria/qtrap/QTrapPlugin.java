@@ -12,6 +12,7 @@ import me.questoria.qtrap.hook.PlaceholderHook;
 import me.questoria.qtrap.hook.VaultHook;
 import me.questoria.qtrap.listener.ListenerManager;
 import me.questoria.qtrap.trap.TrapManager;
+import me.questoria.qtrap.visual.VisualManager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,10 +30,12 @@ public final class QTrapPlugin extends JavaPlugin {
     private HologramManager hologramManager;
     private VaultHook vaultHook;
     private PlaceholderHook placeholderHook;
+    private VisualManager visualManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        saveResource("messages.yml", false);
         this.databaseExecutor = Executors.newSingleThreadExecutor(runnable -> {
             Thread thread = new Thread(runnable, "QTrap-Database");
             thread.setDaemon(true);
@@ -60,6 +63,8 @@ public final class QTrapPlugin extends JavaPlugin {
         if (getConfig().getBoolean("holograms.update-on-load", true)) {
             this.hologramManager.updateAll();
         }
+        this.visualManager = new VisualManager(this);
+        this.visualManager.start();
 
         CommandManager commandManager = new CommandManager(this);
         PluginCommand trap = Objects.requireNonNull(getCommand("trap"));
@@ -88,6 +93,9 @@ public final class QTrapPlugin extends JavaPlugin {
         if (hologramManager != null && getConfig().getBoolean("holograms.delete-on-disable", true)) {
             hologramManager.deleteAll();
         }
+        if (visualManager != null) {
+            visualManager.stop();
+        }
         if (trapManager != null) {
             trapManager.saveAll().join();
         }
@@ -101,11 +109,13 @@ public final class QTrapPlugin extends JavaPlugin {
 
     public void reloadPlugin() {
         reloadConfig();
+        saveResource("messages.yml", false);
         configManager.reload();
         messageManager.reload();
         trapManager.reloadCache();
         hologramManager.reload();
         hologramManager.updateAll();
+        visualManager.start();
     }
 
     private DatabaseManager createDatabaseManager() {
@@ -146,5 +156,9 @@ public final class QTrapPlugin extends JavaPlugin {
 
     public VaultHook vault() {
         return vaultHook;
+    }
+
+    public VisualManager visuals() {
+        return visualManager;
     }
 }

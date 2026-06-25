@@ -3,18 +3,25 @@ package me.questoria.qtrap.config;
 import me.questoria.qtrap.QTrapPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class MessageManager {
     private final QTrapPlugin plugin;
+    private FileConfiguration messages;
 
     public MessageManager(QTrapPlugin plugin) {
         this.plugin = plugin;
+        reload();
     }
 
     public void reload() {
+        File file = new File(plugin.getDataFolder(), "messages.yml");
+        this.messages = YamlConfiguration.loadConfiguration(file);
     }
 
     public void send(CommandSender sender, String key) {
@@ -22,19 +29,19 @@ public final class MessageManager {
     }
 
     public void send(CommandSender sender, String key, Map<String, String> placeholders) {
-        String prefix = plugin.getConfig().getString("messages.prefix", "");
-        if (plugin.getConfig().isList("messages." + key)) {
-            for (String line : plugin.getConfig().getStringList("messages." + key)) {
+        String prefix = messages.getString("messages.prefix", "");
+        if (messages.isList("messages." + key)) {
+            for (String line : messages.getStringList("messages." + key)) {
                 sender.sendMessage(color(apply(line, placeholders)));
             }
             return;
         }
-        String message = plugin.getConfig().getString("messages." + key, key);
+        String message = messages.getString("messages." + key, key);
         sender.sendMessage(color(apply(prefix + message, placeholders)));
     }
 
     public String raw(String key, Map<String, String> placeholders) {
-        return color(apply(plugin.getConfig().getString("messages." + key, key), placeholders));
+        return color(apply(messages.getString("messages." + key, key), placeholders));
     }
 
     public static Map<String, String> placeholders(Object... values) {

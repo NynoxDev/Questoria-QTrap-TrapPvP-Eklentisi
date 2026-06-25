@@ -90,6 +90,19 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             }
             case "liste" -> plugin.gui().openList(player, 1, false);
             case "pazar" -> plugin.gui().openList(player, 1, true);
+            case "sınır", "sinir" -> {
+                boolean enabled = plugin.visuals().toggleBoundary(player);
+                plugin.messages().send(player, enabled ? "boundary-enabled" : "boundary-disabled");
+            }
+            case "log", "kayıt", "kayit" -> {
+                TrapModel target = own != null ? own : current;
+                if (target == null || !target.isMember(player.getUniqueId())) {
+                    plugin.messages().send(player, "not-owner");
+                    return true;
+                }
+                plugin.database().loadLogs(target.id(), plugin.getConfig().getInt("activity-logs.gui-limit", 28))
+                        .thenAccept(logs -> Bukkit.getScheduler().runTask(plugin, () -> plugin.gui().openLogs(player, target, logs)));
+            }
             case "davet" -> {
                 if (own == null || !plugin.traps().hasPermission(own, player.getUniqueId(), "invite")) {
                     plugin.messages().send(player, "not-owner");
@@ -149,6 +162,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 own.forSale(false);
                 plugin.database().saveTrap(own);
+                plugin.traps().log(own, player, "SALE_CANCEL", "Trap satışı iptal edildi.");
                 plugin.holograms().update(own);
                 plugin.messages().send(player, "sale-cancelled");
             }
@@ -168,6 +182,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
                 }
                 own.spawn(player.getLocation());
                 plugin.database().saveTrap(own);
+                plugin.traps().log(own, player, "SPAWN_SET", "Trap spawn noktası güncellendi.");
                 plugin.holograms().update(own);
                 plugin.messages().send(player, "spawn-set");
             }
@@ -215,6 +230,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             if (plugin.vault().withdraw(player, amount)) {
                 trap.bankBalance(trap.bankBalance() + amount);
                 plugin.database().saveTrap(trap);
+                plugin.traps().log(trap, player, "BANK_DEPOSIT", plugin.vault().format(amount) + " yatırıldı.");
                 plugin.holograms().update(trap);
                 plugin.messages().send(player, "bank-deposit", MessageManager.placeholders("%amount%", plugin.vault().format(amount)));
             }
@@ -227,6 +243,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             trap.bankBalance(trap.bankBalance() - amount);
             plugin.vault().deposit(player, amount);
             plugin.database().saveTrap(trap);
+            plugin.traps().log(trap, player, "BANK_WITHDRAW", plugin.vault().format(amount) + " çekildi.");
             plugin.holograms().update(trap);
             plugin.messages().send(player, "bank-withdraw", MessageManager.placeholders("%amount%", plugin.vault().format(amount)));
         }
@@ -245,6 +262,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         trap.forSale(true);
         trap.salePrice(price);
         plugin.database().saveTrap(trap);
+        plugin.traps().log(trap, player, "SALE", "Trap satışa çıkarıldı. Fiyat: " + plugin.vault().format(price));
         plugin.holograms().update(trap);
         plugin.messages().send(player, "sold", MessageManager.placeholders("%price%", plugin.vault().format(price)));
     }
@@ -256,6 +274,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         }
         trap.pvp(!trap.pvp());
         plugin.database().saveTrap(trap);
+        plugin.traps().log(trap, player, "PVP_TOGGLE", "PvP durumu " + (trap.pvp() ? "Açık" : "Kapalı") + " yapıldı.");
         plugin.holograms().update(trap);
         plugin.messages().send(player, "pvp-toggle", MessageManager.placeholders("%state%", trap.pvp() ? "Açık" : "Kapalı"));
     }
@@ -267,6 +286,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         }
         trap.visit(!trap.visit());
         plugin.database().saveTrap(trap);
+        plugin.traps().log(trap, player, "VISIT_TOGGLE", "Ziyaret durumu " + (trap.visit() ? "Açık" : "Kapalı") + " yapıldı.");
         plugin.holograms().update(trap);
         plugin.messages().send(player, "visit-toggle", MessageManager.placeholders("%state%", trap.visit() ? "Açık" : "Kapalı"));
     }
@@ -445,6 +465,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         }
         plugin.traps().rebuildChunkCache();
         plugin.database().saveTrap(trap);
+        plugin.traps().log(trap, (Player) sender, "CHUNK_ADD", "Chunk eklendi: " + chunk.x() + ", " + chunk.z());
         plugin.holograms().update(trap);
         plugin.messages().send(sender, "chunk-added", MessageManager.placeholders("%id%", trap.id(), "%chunks%", trap.chunks().size()));
     }
@@ -470,6 +491,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
         }
         plugin.traps().rebuildChunkCache();
         plugin.database().saveTrap(trap);
+        plugin.traps().log(trap, (Player) sender, "CHUNK_REMOVE", "Chunk çıkarıldı: " + chunk.x() + ", " + chunk.z());
         plugin.holograms().update(trap);
         plugin.messages().send(sender, "chunk-removed", MessageManager.placeholders("%id%", trap.id(), "%chunks%", trap.chunks().size()));
     }
@@ -520,7 +542,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
             if (args.length == 2) return new ArrayList<>(plugin.traps().traps().stream().map(TrapModel::id).toList());
         }
         if (args.length == 1) {
-            return Arrays.asList("al", "menu", "bilgi", "liste", "davet", "kabul", "reddet", "at", "rol", "banka", "para", "yükselt", "satış", "satışiptal", "pazar", "spawn", "setspawn", "ziyaret", "sohbet", "pvp", "fly");
+            return Arrays.asList("al", "menu", "bilgi", "liste", "davet", "kabul", "reddet", "at", "rol", "banka", "para", "yükselt", "yukselt", "satış", "satis", "satışiptal", "satisiptal", "pazar", "spawn", "setspawn", "ziyaret", "sohbet", "pvp", "fly", "sınır", "sinir", "log", "kayıt", "kayit");
         }
         return Collections.emptyList();
     }

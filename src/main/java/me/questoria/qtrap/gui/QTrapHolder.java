@@ -7,12 +7,18 @@ public final class QTrapHolder implements InventoryHolder {
     private final GuiType type;
     private final String trapId;
     private final int page;
+    private final int mode;
     private Inventory inventory;
 
     public QTrapHolder(GuiType type, String trapId, int page) {
+        this(type, trapId, page, 0);
+    }
+
+    public QTrapHolder(GuiType type, String trapId, int page, int mode) {
         this.type = type;
         this.trapId = trapId;
         this.page = page;
+        this.mode = mode;
     }
 
     public GuiType type() {
@@ -25,6 +31,10 @@ public final class QTrapHolder implements InventoryHolder {
 
     public int page() {
         return page;
+    }
+
+    public int mode() {
+        return mode;
     }
 
     public void inventory(Inventory inventory) {

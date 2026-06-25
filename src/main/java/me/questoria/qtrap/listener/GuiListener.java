@@ -6,6 +6,7 @@ import me.questoria.qtrap.gui.GuiManager;
 import me.questoria.qtrap.gui.GuiType;
 import me.questoria.qtrap.gui.QTrapHolder;
 import me.questoria.qtrap.model.TrapModel;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,6 +26,7 @@ public final class GuiListener implements Listener {
         if (!(event.getInventory().getHolder() instanceof QTrapHolder holder)) return;
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
+        playClick(player);
 
         int slot = event.getRawSlot();
         TrapModel trap = holder.trapId() == null ? null : plugin.traps().byId(holder.trapId()).orElse(null);
@@ -35,6 +37,12 @@ public final class GuiListener implements Listener {
         }
         if (holder.type() == GuiType.LIST || holder.type() == GuiType.MARKET) {
             handleList(player, holder, slot);
+            return;
+        }
+        if (holder.type() == GuiType.LOGS) {
+            if (slot == 49) {
+                plugin.gui().openMain(player);
+            }
             return;
         }
         if (holder.type() == GuiType.MEMBERS && trap != null) {
@@ -66,6 +74,15 @@ public final class GuiListener implements Listener {
         }
     }
 
+    private void playClick(Player player) {
+        String raw = plugin.getConfig().getString("sounds.click", "UI_BUTTON_CLICK");
+        try {
+            player.playSound(player.getLocation(), Sound.valueOf(raw), 0.7F, 1.1F);
+        } catch (IllegalArgumentException ignored) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.7F, 1.1F);
+        }
+    }
+
     private void handleMain(Player player, int slot) {
         TrapModel own = plugin.traps().ownedBy(player.getUniqueId()).orElse(null);
         TrapModel current = plugin.traps().at(player.getLocation()).orElse(null);
@@ -93,6 +110,7 @@ public final class GuiListener implements Listener {
             }
             case 32 -> player.performCommand("trap satışiptal");
             case 33 -> player.performCommand("trap sohbet");
+            case 34 -> player.performCommand("trap log");
             case 40 -> player.closeInventory();
             default -> {
             }
@@ -102,15 +120,35 @@ public final class GuiListener implements Listener {
     private void handleList(Player player, QTrapHolder holder, int slot) {
         boolean market = holder.type() == GuiType.MARKET;
         if (slot == 45) {
-            plugin.gui().openList(player, holder.page() - 1, market);
+            plugin.gui().openList(player, holder.page() - 1, market, holder.mode());
             return;
         }
         if (slot == 53) {
-            plugin.gui().openList(player, holder.page() + 1, market);
+            plugin.gui().openList(player, holder.page() + 1, market, holder.mode());
+            return;
+        }
+        if (market && slot == 46) {
+            plugin.gui().openList(player, 1, true, 0);
+            return;
+        }
+        if (market && slot == 47) {
+            plugin.gui().openList(player, 1, true, 1);
+            return;
+        }
+        if (market && slot == 51) {
+            plugin.gui().openList(player, 1, true, 2);
             return;
         }
 
         List<TrapModel> traps = market ? plugin.traps().marketTraps() : plugin.traps().sortedTraps();
+        if (market) {
+            traps = new java.util.ArrayList<>(traps);
+            switch (holder.mode()) {
+                case 1 -> traps.sort(java.util.Comparator.<TrapModel>comparingInt(trap -> trap.level()).reversed());
+                case 2 -> traps.sort(java.util.Comparator.<TrapModel>comparingInt(trap -> trap.health()).reversed());
+                default -> traps.sort(java.util.Comparator.comparingDouble(trap -> trap.salePrice()));
+            }
+        }
         int index = -1;
         for (int i = 0; i < GuiManager.LIST_SLOTS.length; i++) {
             if (GuiManager.LIST_SLOTS[i] == slot) {

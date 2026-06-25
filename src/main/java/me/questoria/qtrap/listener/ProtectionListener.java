@@ -31,6 +31,7 @@ public final class ProtectionListener implements Listener {
         TrapModel trap = plugin.traps().at(event.getBlock().getLocation()).orElse(null);
         if (trap == null || can(event.getPlayer(), trap, "break")) return;
         event.setCancelled(true);
+        plugin.visuals().playDeniedEffect(event.getPlayer());
         plugin.messages().send(event.getPlayer(), "protected");
         if (plugin.getConfig().getBoolean("protection.damage-health-on-denied-break", true)) {
             int damage = plugin.getConfig().getInt("protection.denied-break-damage", 1);
@@ -45,6 +46,7 @@ public final class ProtectionListener implements Listener {
         TrapModel trap = plugin.traps().at(event.getBlock().getLocation()).orElse(null);
         if (trap == null || can(event.getPlayer(), trap, "place")) return;
         event.setCancelled(true);
+        plugin.visuals().playDeniedEffect(event.getPlayer());
         plugin.messages().send(event.getPlayer(), "protected");
     }
 
@@ -57,6 +59,7 @@ public final class ProtectionListener implements Listener {
         Material type = event.getClickedBlock().getType();
         if (type.isInteractable()) {
             event.setCancelled(true);
+            plugin.visuals().playDeniedEffect(event.getPlayer());
             plugin.messages().send(event.getPlayer(), "protected");
         }
     }
@@ -69,6 +72,7 @@ public final class ProtectionListener implements Listener {
         TrapModel trap = plugin.traps().at(container.getLocation()).orElse(null);
         if (trap == null || can(player, trap, "chest")) return;
         event.setCancelled(true);
+        plugin.visuals().playDeniedEffect(player);
         plugin.messages().send(player, "protected");
     }
 
@@ -79,6 +83,7 @@ public final class ProtectionListener implements Listener {
         TrapModel trap = plugin.traps().at(victim.getLocation()).orElse(null);
         if (trap == null || trap.pvp()) return;
         event.setCancelled(true);
+        plugin.visuals().playDeniedEffect(attacker);
         plugin.messages().send(attacker, "protected");
     }
 

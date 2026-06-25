@@ -112,11 +112,13 @@ public final class TrapManager {
         traps.put(id.toLowerCase(), trap);
         rebuildChunkCache();
         plugin.database().saveTrap(trap);
+        log(trap, (UUID) null, "CREATE", "Trap oluşturuldu. Fiyat: " + price);
         plugin.holograms().update(trap);
         return trap;
     }
 
     public void delete(TrapModel trap) {
+        log(trap, (UUID) null, "DELETE", "Trap silindi.");
         plugin.holograms().delete(trap);
         traps.remove(trap.id().toLowerCase());
         rebuildChunkCache();
@@ -146,7 +148,9 @@ public final class TrapManager {
         trap.salePrice(price);
         trap.health(trap.maxHealth());
         plugin.database().saveTrap(trap);
+        log(trap, player, "BUY", "Trap satın alındı. Fiyat: " + price);
         plugin.holograms().update(trap);
+        plugin.visuals().playBuyEffect(player, trap);
         return true;
     }
 
@@ -178,6 +182,7 @@ public final class TrapManager {
         }
         trap.members().put(player.getUniqueId(), new TrapMember(player.getUniqueId(), TrapRole.MEMBER));
         plugin.database().saveTrap(trap);
+        log(trap, player, "MEMBER_JOIN", "Davet kabul edildi.");
         plugin.holograms().update(trap);
         return true;
     }
@@ -189,6 +194,7 @@ public final class TrapManager {
     public void kick(TrapModel trap, UUID uuid) {
         trap.members().remove(uuid);
         plugin.database().saveTrap(trap);
+        log(trap, uuid, "MEMBER_KICK", "Üye trapten çıkarıldı.");
     }
 
     public void role(TrapModel trap, UUID uuid, TrapRole role) {
@@ -196,6 +202,7 @@ public final class TrapManager {
         if (member != null) {
             member.role(role);
             plugin.database().saveTrap(trap);
+            log(trap, uuid, "ROLE_CHANGE", "Rol " + role.name() + " olarak ayarlandı.");
         }
     }
 
@@ -214,13 +221,17 @@ public final class TrapManager {
         trap.maxHealth(plugin.configManager().maxHealthForLevel(nextLevel));
         trap.health(trap.maxHealth());
         plugin.database().saveTrap(trap);
+        log(trap, player, "UPGRADE", "Trap seviyesi " + nextLevel + " oldu.");
         plugin.holograms().update(trap);
+        plugin.visuals().playUpgradeEffect(player, trap);
         plugin.messages().send(player, "upgraded", MessageManager.placeholders("%level%", nextLevel));
         return true;
     }
 
     public void damage(TrapModel trap, int amount) {
         trap.health(Math.max(0, trap.health() - amount));
+        log(trap, (UUID) null, "DAMAGE", "Trap canı " + amount + " azaldı. Kalan: " + trap.health() + "/" + trap.maxHealth());
+        plugin.visuals().playDamageEffect(trap);
         if (trap.health() <= 0) {
             UUID oldOwner = trap.owner();
             trap.owner(null);
@@ -229,12 +240,30 @@ public final class TrapManager {
             trap.forSale(false);
             trap.bankBalance(0D);
             trap.health(trap.maxHealth());
+            log(trap, oldOwner, "DISBAND", "Trap canı bitti ve dağıldı.");
             if (oldOwner != null && Bukkit.getPlayer(oldOwner) != null) {
                 plugin.messages().send(Bukkit.getPlayer(oldOwner), "trap-disbanded", MessageManager.placeholders("%trap%", trap.name()));
             }
         }
         plugin.database().saveTrap(trap);
         plugin.holograms().update(trap);
+    }
+
+    public void log(TrapModel trap, Player actor, String action, String detail) {
+        if (actor == null) {
+            log(trap, (UUID) null, action, detail);
+            return;
+        }
+        plugin.database().addLog(trap.id(), actor.getUniqueId(), actor.getName(), action, detail);
+    }
+
+    public void log(TrapModel trap, UUID actor, String action, String detail) {
+        String actorName = null;
+        if (actor != null) {
+            OfflinePlayer offline = Bukkit.getOfflinePlayer(actor);
+            actorName = offline.getName();
+        }
+        plugin.database().addLog(trap.id(), actor, actorName, action, detail);
     }
 
     public ArrayList<TrapModel> sortedTraps() {

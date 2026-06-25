@@ -10,5 +10,6 @@ public enum GuiType {
     CONFIRM_BUY,
     BANK,
     MARKET,
+    LOGS,
     ADMIN
 }

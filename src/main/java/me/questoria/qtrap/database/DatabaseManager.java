@@ -2,6 +2,7 @@ package me.questoria.qtrap.database;
 
 import me.questoria.qtrap.QTrapPlugin;
 import me.questoria.qtrap.model.TrapChunk;
+import me.questoria.qtrap.model.TrapLogEntry;
 import me.questoria.qtrap.model.TrapMember;
 import me.questoria.qtrap.model.TrapModel;
 import me.questoria.qtrap.model.TrapRole;
@@ -88,6 +89,16 @@ public abstract class DatabaseManager {
                       PRIMARY KEY (trap_id, uuid, permission)
                     )
                     """);
+            statement.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS qtrap_logs (
+                      trap_id VARCHAR(64) NOT NULL,
+                      actor_uuid VARCHAR(36),
+                      actor_name VARCHAR(64),
+                      action VARCHAR(64) NOT NULL,
+                      detail TEXT,
+                      created_at BIGINT NOT NULL
+                    )
+                    """);
         } catch (SQLException exception) {
             throw new IllegalStateException("QTrap database init failed", exception);
         }
@@ -145,6 +156,57 @@ public abstract class DatabaseManager {
             } catch (SQLException exception) {
                 plugin.getLogger().severe("Trap silinemedi: " + exception.getMessage());
             }
+        }, plugin.databaseExecutor());
+    }
+
+    public CompletableFuture<Void> addLog(String trapId, UUID actor, String actorName, String action, String detail) {
+        return CompletableFuture.runAsync(() -> {
+            try (Connection connection = connection();
+                 PreparedStatement statement = connection.prepareStatement("""
+                         INSERT INTO qtrap_logs (trap_id, actor_uuid, actor_name, action, detail, created_at)
+                         VALUES (?, ?, ?, ?, ?, ?)
+                         """)) {
+                statement.setString(1, trapId);
+                statement.setString(2, actor == null ? null : actor.toString());
+                statement.setString(3, actorName);
+                statement.setString(4, action);
+                statement.setString(5, detail);
+                statement.setLong(6, System.currentTimeMillis());
+                statement.executeUpdate();
+            } catch (SQLException exception) {
+                plugin.getLogger().warning("Trap log kaydedilemedi: " + exception.getMessage());
+            }
+        }, plugin.databaseExecutor());
+    }
+
+    public CompletableFuture<List<TrapLogEntry>> loadLogs(String trapId, int limit) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<TrapLogEntry> logs = new ArrayList<>();
+            try (Connection connection = connection();
+                 PreparedStatement statement = connection.prepareStatement("""
+                         SELECT * FROM qtrap_logs
+                         WHERE trap_id=?
+                         ORDER BY created_at DESC
+                         LIMIT ?
+                         """)) {
+                statement.setString(1, trapId);
+                statement.setInt(2, Math.max(1, limit));
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        logs.add(new TrapLogEntry(
+                                resultSet.getString("trap_id"),
+                                uuid(resultSet.getString("actor_uuid")),
+                                resultSet.getString("actor_name"),
+                                resultSet.getString("action"),
+                                resultSet.getString("detail"),
+                                resultSet.getLong("created_at")
+                        ));
+                    }
+                }
+            } catch (SQLException exception) {
+                plugin.getLogger().warning("Trap loglari yuklenemedi: " + exception.getMessage());
+            }
+            return logs;
         }, plugin.databaseExecutor());
     }
 
@@ -255,7 +317,7 @@ public abstract class DatabaseManager {
     }
 
     private void deleteChildren(Connection connection, String id) throws SQLException {
-        for (String table : List.of("qtrap_chunks", "qtrap_members", "qtrap_trusted")) {
+        for (String table : List.of("qtrap_chunks", "qtrap_members", "qtrap_trusted", "qtrap_logs")) {
             try (PreparedStatement statement = connection.prepareStatement("DELETE FROM " + table + " WHERE trap_id=?")) {
                 statement.setString(1, id);
                 statement.executeUpdate();
